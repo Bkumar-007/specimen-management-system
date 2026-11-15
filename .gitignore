@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.*.local
+frontend/.env.local
 
 # Java / Spring
 backend/target/

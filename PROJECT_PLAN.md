@@ -125,11 +125,11 @@ Exact DTO shapes can be finalized when coding Phase 1–2.
 ## 7. Build phases
 
 ### Phase 0 — Repo bootstrap (1 sitting)
-- [ ] Create Neon project + copy connection string (see `docs/NEON_SETUP.md`)
-- [ ] `.env.example` + Spring Boot skeleton wired to Neon via env vars + JWT auth stub
-- [ ] Next.js skeleton + login page shell
-- [ ] README with run steps
-- [ ] Seed one admin + one tech user
+- [x] Create Neon project + copy connection string (see `docs/NEON_SETUP.md`)
+- [x] `.env.example` + Spring Boot skeleton wired to Neon via env vars + JWT auth stub
+- [x] Next.js skeleton + login page shell
+- [x] README with run steps
+- [x] Seed one admin + one tech user
 
 ### Phase 1 — Orders + patients + clients
 - [ ] Entities: Client, Patient, Order, OrderTest, TestCatalog

@@ -1,0 +1,50 @@
+.shell {
+  min-height: 100vh;
+  padding: 2rem;
+  background: linear-gradient(160deg, #f4f7f9 0%, #e7eef3 100%);
+  color: #15202b;
+  font-family: "Segoe UI", "IBM Plex Sans", sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.brand {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2f5d7a;
+  font-weight: 700;
+}
+
+.title {
+  margin: 0.35rem 0 0;
+  font-size: 1.75rem;
+}
+
+.logout {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #b7c6d2;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.panel {
+  max-width: 40rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #c5d3de;
+  line-height: 1.5;
+}
+
+.note {
+  margin: 0.75rem 0 0;
+  color: #4a5b68;
+}
