@@ -1,52 +1,87 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import styles from "./dashboard.module.css";
+import { api } from "../../lib/api";
+import AppShell from "../components/AppShell";
+import { EmptyState, ErrorNote, Skeleton, StatusBadge, fmt } from "../components/ui";
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const [user, setUser] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [recent, setRecent] = useState([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("sms_token");
-    const raw = localStorage.getItem("sms_user");
-    if (!token || !raw) {
-      router.replace("/login");
-      return;
-    }
-    setUser(JSON.parse(raw));
-  }, [router]);
-
-  function logout() {
-    localStorage.removeItem("sms_token");
-    localStorage.removeItem("sms_user");
-    router.replace("/login");
-  }
-
-  if (!user) {
-    return <main className={styles.shell}><p>Loading…</p></main>;
-  }
+    Promise.all([api("/api/stats"), api("/api/specimens")])
+      .then(([s, specimens]) => {
+        setStats(s);
+        setRecent(specimens.slice(0, 8));
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
-    <main className={styles.shell}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.brand}>Specimen Management</p>
-          <h1 className={styles.title}>Dashboard</h1>
-        </div>
-        <button className={styles.logout} type="button" onClick={logout}>
-          Sign out
-        </button>
-      </header>
-      <section className={styles.panel}>
-        <p>
-          Signed in as <strong>{user.username}</strong> ({user.role}).
-        </p>
-        <p className={styles.note}>
-          Phase 0 bootstrap is ready. Orders, specimens, and results come in later phases.
-        </p>
-      </section>
-    </main>
+    <AppShell
+      title="Dashboard"
+      actions={<Link className="btn" href="/orders/new">New order</Link>}
+    >
+      <ErrorNote error={error} />
+      {loading ? (
+        <section className="card"><Skeleton rows={6} /></section>
+      ) : (
+        <>
+          {stats ? (
+            <section className="card">
+              <h2>Specimens by status</h2>
+              <div className="stats">
+                {Object.entries(stats.bySpecimenStatus).map(([status, count]) => (
+                  <Link key={status} className="stat" href={`/specimens?status=${status}`}>
+                    <div className="n">{count}</div>
+                    <StatusBadge status={status} />
+                  </Link>
+                ))}
+                <div className="stat">
+                  <div className="n">{stats.totalOrders}</div>
+                  <span className="muted">Orders</span>
+                </div>
+              </div>
+            </section>
+          ) : null}
+
+          <section className="card">
+            <h2>Recent specimens</h2>
+            {recent.length === 0 ? (
+              <EmptyState
+                title="No specimens yet"
+                detail="Create an order, then accession a specimen to get a barcode."
+                href="/orders/new"
+                actionLabel="Create first order"
+              />
+            ) : (
+              <div className="tableWrap">
+                <table className="table">
+                  <thead>
+                    <tr><th>Barcode</th><th>Patient</th><th>Order</th><th>Status</th><th>Received</th></tr>
+                  </thead>
+                  <tbody>
+                    {recent.map((s) => (
+                      <tr key={s.id}>
+                        <td className="mono"><Link href={`/specimens/${s.id}`}>{s.barcode}</Link></td>
+                        <td>{s.patientName} <span className="muted">({s.mrn})</span></td>
+                        <td><Link href={`/orders/${s.orderId}`}>{s.orderNumber}</Link></td>
+                        <td><StatusBadge status={s.status} /></td>
+                        <td>{fmt(s.receivedAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </>
+      )}
+    </AppShell>
   );
 }

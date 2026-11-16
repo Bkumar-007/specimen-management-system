@@ -1,0 +1,9 @@
+{
+  "instrumentId": "SIM-ANALYZER-1",
+  "barcode": "REPLACE-WITH-SPECIMEN-BARCODE",
+  "results": [
+    { "analyte": "WBC", "value": "11.9", "unit": "10^3/uL", "flag": "H" },
+    { "analyte": "HGB", "value": "13.8", "unit": "g/dL", "flag": "N" },
+    { "analyte": "PLT", "value": "250", "unit": "10^3/uL", "flag": "N" }
+  ]
+}

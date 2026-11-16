@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:sms;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+
+app:
+  jwt:
+    secret: test-secret-test-secret-test-secret-123456
+    expiration-ms: 3600000
+  cors:
+    allowed-origins: http://localhost:3000
+  seed:
+    demo-users: true
+  instrument:
+    api-key: test-instrument-key
+    inbox:
+      enabled: false

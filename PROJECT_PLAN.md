@@ -1,4 +1,4 @@
-# Specimen Management System — Project Plan (v1)
+﻿# Specimen Management System — Project Plan (v1)
 
 Portfolio project: a **lab Specimen Management System** covering order → accession → status tracking → result entry, with a clear path to add a **simulated instrument interface** later.
 
@@ -132,34 +132,34 @@ Exact DTO shapes can be finalized when coding Phase 1–2.
 - [x] Seed one admin + one tech user
 
 ### Phase 1 — Orders + patients + clients
-- [ ] Entities: Client, Patient, Order, OrderTest, TestCatalog
-- [ ] CRUD APIs for clients and orders
-- [ ] Seed fictional catalog (CBC, CMP, TSH, etc.)
-- [ ] UI: create order, list orders
+- [x] Entities: Client, Patient, Order, OrderTest, TestCatalog
+- [x] CRUD APIs for clients and orders
+- [x] Seed fictional catalog (CBC, CMP, TSH, etc.)
+- [x] UI: create order, list orders
 
 ### Phase 2 — Specimens + status engine
-- [ ] Specimen entity + barcode generation
-- [ ] Status transition service (reject illegal moves)
-- [ ] Accession UI + status timeline on detail page
-- [ ] Search by barcode / MRN / status
+- [x] Specimen entity + barcode generation
+- [x] Status transition service (reject illegal moves)
+- [x] Accession UI + status timeline on detail page
+- [x] Search by barcode / MRN / status
 
 ### Phase 3 — Results + audit
-- [ ] Result entry API + UI
-- [ ] Audit log on create/update/status change
-- [ ] Role checks (tech vs admin)
-- [ ] Demo script in README (happy path)
+- [x] Result entry API + UI
+- [x] Audit log on create/update/status change
+- [x] Role checks (tech vs admin)
+- [x] Demo script in README (happy path)
 
 ### Phase 4 — Simulated instrument interface (optional but strong)
-- [ ] `POST /api/instruments/ingest` accepting a simple JSON payload
-- [ ] Match by barcode → attach result → set `RESULTED`
-- [ ] Optional: drop a sample `.json` / `.hl7-lite` file into `inbox/` for a watcher
-- [ ] Document as “lab instrument interface (simulated analyzer)” on resume
+- [x] `POST /api/instruments/ingest` accepting a simple JSON payload
+- [x] Match by barcode → attach result → set `RESULTED`
+- [x] Optional: drop a sample `.json` / `.hl7-lite` file into `inbox/` for a watcher
+- [x] Document as “lab instrument interface (simulated analyzer)” on resume
 
 ### Phase 5 — Polish for portfolio
-- [ ] Validation, error messages, basic tests
-- [ ] Deploy notes (optional: Azure / Render / Railway)
-- [ ] Short architecture diagram in README
-- [ ] Resume bullets drafted from real features only
+- [x] Validation, error messages, basic tests
+- [x] Deploy notes (optional: Azure / Render / Railway)
+- [x] Short architecture diagram in README
+- [x] Resume bullets drafted from real features only
 
 ---
 

@@ -32,3 +32,9 @@ skills-lock.json
 *.swp
 .DS_Store
 Thumbs.db
+
+# Instrument inbox (runtime)
+backend/inbox/
+
+# Personal resume notes (local only)
+docs/RESUME_BULLETS.md
