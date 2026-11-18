@@ -8,7 +8,9 @@ This guide deploys:
 | Backend API | [Render](https://render.com) | Free tier |
 | Frontend UI | [Netlify](https://netlify.com) | Free tier |
 
-**Before you start:** push the latest code (including `backend/Dockerfile` and `PORT` support) to GitHub.
+**Before you start:** push the latest code (including `backend/Dockerfile`, Flyway migrations, and `PORT` support) to GitHub.
+
+Schema is applied by **Flyway** on API startup (`ddl-auto: validate`). Existing Neon databases that already have tables are baselined automatically so `V1` is not re-applied.
 
 ```powershell
 cd c:\Users\bk733\Downloads\BKDeveloper\specimen-management-system

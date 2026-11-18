@@ -1,0 +1,8 @@
+target/
+.idea/
+*.iml
+*.log
+inbox/
+.git/
+.gitignore
+*.md

@@ -1,0 +1,53 @@
+# Offline / local demo stack: Postgres + API.
+# Usage:
+#   docker compose up --build
+# Optional UI (browser still needs NEXT_PUBLIC_API_URL=http://localhost:8080):
+#   docker compose --profile full up --build
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sms
+      POSTGRES_USER: sms
+      POSTGRES_PASSWORD: sms
+    ports:
+      - "5432:5432"
+    volumes:
+      - sms_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sms -d sms"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/sms
+      DB_USERNAME: sms
+      DB_PASSWORD: sms
+      JWT_SECRET: docker-compose-dev-secret-change-me-32chars
+      INSTRUMENT_API_KEY: sim-analyzer-key
+      SEED_DEMO_USERS: "true"
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    profiles: ["full"]
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  sms_pg:

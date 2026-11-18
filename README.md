@@ -1,14 +1,17 @@
 # Specimen Management System
 
-Portfolio lab workflow app: **order Ã¢â€ â€™ accession Ã¢â€ â€™ status tracking Ã¢â€ â€™ results**, with audit logging and a **simulated instrument (analyzer) interface**.
+[![CI](https://github.com/Bkumar-007/specimen-management-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Bkumar-007/specimen-management-system/actions/workflows/ci.yml)
+
+Portfolio lab workflow app: **order → accession → status tracking → results**, with audit logging and a **simulated instrument (analyzer) interface**.
 
 > Fictional demo data only. Not affiliated with STARLIMS, Outreach, or any commercial LIMS.
 
 ## Stack
 
-- Backend: Java 21, Spring Boot 3, Spring Security (JWT), JPA
+- Backend: Java 21, Spring Boot 3, Spring Security (JWT), JPA, Flyway
 - Frontend: Next.js (JavaScript, App Router)
 - Database: [Neon](https://neon.tech) free-tier Postgres (H2 in-memory for automated tests)
+- Ops: Docker / Compose, GitHub Actions CI
 
 ## Architecture
 
@@ -43,7 +46,7 @@ Layers (`backend/src/main/java/com/specimen/sms`): `domain` (entities, repositor
    mvn spring-boot:run
    ```
 
-   Health check: `http://localhost:8080/api/health`. Tables are created automatically and the catalog, clients and demo users are seeded on startup.
+   Health check: `http://localhost:8080/api/health`. Flyway applies schema migrations on startup; catalog, clients and demo users are seeded when empty.
 
 3. Frontend (port 3000):
 
@@ -54,6 +57,16 @@ Layers (`backend/src/main/java/com/specimen/sms`): `domain` (entities, repositor
    ```
 
    Open `http://localhost:3000`.
+
+### Docker Compose (API + local Postgres)
+
+No Neon required for an offline demo:
+
+```bash
+docker compose up --build
+```
+
+API: `http://localhost:8080`. Optional UI container: `docker compose --profile full up --build` (port 3000).
 
 ### Seed users
 
@@ -148,7 +161,7 @@ The message is a simple JSON format designed for this project. It is not HL7 or 
 - **Backend** (Render Docker, Railway, Azure, etc.): use `backend/Dockerfile`, or `mvn -DskipTests package` then `java -jar target/specimen-management-0.0.1-SNAPSHOT.jar`. Set `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `INSTRUMENT_API_KEY`, `CORS_ALLOWED_ORIGINS`, and `SEED_DEMO_USERS`.
 - **Frontend** (Netlify): set `NEXT_PUBLIC_API_URL` to the backend URL, then build. See `netlify.toml`.
 - Neon and free Render both sleep when idle â€” first request after a pause can take ~30â€“60s.
-- Hibernate `ddl-auto: update` is fine for a demo; use Flyway before treating data as long-lived.
+- Schema is managed with Flyway (`backend/src/main/resources/db/migration`); Hibernate runs in `validate` mode.
 
 ## Docs
 
