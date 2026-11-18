@@ -42,3 +42,54 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8080
+
+  # Smoke checks against live deploys (does NOT trigger Netlify/Render builds).
+  # Auto-deploy from Git still happens separately; these only report status in GitHub Checks.
+  netlify:
+    name: Netlify (site up)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [frontend]
+    steps:
+      - name: Wait for Netlify site
+        env:
+          NETLIFY_SITE_URL: ${{ vars.NETLIFY_SITE_URL }}
+        run: |
+          set -e
+          URL="${NETLIFY_SITE_URL:-https://lab-workflow-sms.netlify.app}"
+          echo "Checking $URL"
+          for i in $(seq 1 20); do
+            code=$(curl -sS -o /tmp/netlify_body -w "%{http_code}" --max-time 30 "$URL" || true)
+            echo "Attempt $i: HTTP $code"
+            if [ "$code" = "200" ] || [ "$code" = "301" ] || [ "$code" = "302" ]; then
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "Netlify site did not become healthy in time"
+          exit 1
+
+  render:
+    name: Render (api health)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [backend]
+    steps:
+      - name: Wait for Render API health
+        env:
+          RENDER_HEALTH_URL: ${{ vars.RENDER_HEALTH_URL }}
+        run: |
+          set -e
+          URL="${RENDER_HEALTH_URL:-https://specimen-sms-api.onrender.com/api/health}"
+          echo "Checking $URL"
+          for i in $(seq 1 20); do
+            code=$(curl -sS -o /tmp/render_body -w "%{http_code}" --max-time 45 "$URL" || true)
+            echo "Attempt $i: HTTP $code"
+            if [ "$code" = "200" ]; then
+              cat /tmp/render_body || true
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "Render API did not become healthy in time"
+          exit 1
