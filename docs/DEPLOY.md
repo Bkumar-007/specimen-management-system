@@ -1,4 +1,4 @@
-# Deploy live (Render + Vercel + Neon)
+# Deploy live (Render + Netlify + Neon)
 
 This guide deploys:
 
@@ -6,7 +6,7 @@ This guide deploys:
 |-------|------|------|
 | Database | Neon (already set up) | Free |
 | Backend API | [Render](https://render.com) | Free tier |
-| Frontend UI | [Vercel](https://vercel.com) | Free tier |
+| Frontend UI | [Netlify](https://netlify.com) | Free tier |
 
 **Before you start:** push the latest code (including `backend/Dockerfile` and `PORT` support) to GitHub.
 
@@ -99,32 +99,36 @@ If it fails: open **Logs** on Render. Common issues = bad `DB_URL`, wrong Root D
 
 ---
 
-## Step 2 — Deploy frontend on Vercel
+## Step 2 — Deploy frontend on Netlify
 
-1. Sign up / log in at [https://vercel.com](https://vercel.com) (GitHub login).
-2. Click **Add New…** → **Project**.
-3. Import **`Bkumar-007/specimen-management-system`**.
-4. Configure:
+1. Sign up / log in at [https://app.netlify.com](https://app.netlify.com) (GitHub login).
+2. Click **Add new site** → **Import an existing project** → **GitHub**.
+3. Select **`Bkumar-007/specimen-management-system`**.
+4. Build settings (repo has `netlify.toml`, so these should auto-fill):
 
 | Field | Value |
 |-------|--------|
-| Framework Preset | Next.js |
-| Root Directory | **`frontend`** (click Edit) |
-| Build Command | `npm run build` (default) |
-| Output | default |
+| Base directory | `frontend` |
+| Build command | `npm run build` |
+| Publish directory | `.next` |
+| Plugin | `@netlify/plugin-nextjs` (from `netlify.toml`) |
 
-5. **Environment Variables** → add:
+5. **Environment variables** → **Add a variable** → **Add a single variable**:
 
 | Key | Value |
 |-----|--------|
 | `NEXT_PUBLIC_API_URL` | `https://specimen-sms-api.onrender.com` *(your Render URL, no trailing slash)* |
 
-6. Click **Deploy**. Wait ~1–2 minutes.
-7. Copy the frontend URL, e.g.:
+6. Click **Deploy site**. Wait ~2–4 minutes.
+7. Copy the site URL, e.g.:
 
 ```text
-https://specimen-management-system-xxxx.vercel.app
+https://random-name-123456.netlify.app
 ```
+
+8. Optional: **Site configuration** → **Domain management** → **Options** → **Edit site name**  
+   Example: `specimen-sms` → `https://specimen-sms.netlify.app`  
+   Later you can attach a custom domain (e.g. `sms.yourname.dev`) so it does not end with `.netlify.app`.
 
 ---
 
@@ -134,11 +138,11 @@ https://specimen-management-system-xxxx.vercel.app
 2. Change:
 
 ```text
-CORS_ALLOWED_ORIGINS=https://specimen-management-system-xxxx.vercel.app
+CORS_ALLOWED_ORIGINS=https://specimen-sms.netlify.app
 ```
 
-Use your real Vercel URL (exact match, `https`, no trailing slash).  
-If you have a custom domain later, put that instead (or comma-separate both).
+Use your real Netlify URL (exact match, `https`, no trailing slash).  
+If you add a custom domain later, set that instead (or comma-separate both).
 
 3. **Save** → Render redeploys automatically.
 4. Wait until deploy is **Live**.
@@ -147,14 +151,14 @@ If you have a custom domain later, put that instead (or comma-separate both).
 
 ## Step 4 — Smoke test
 
-1. Open the Vercel URL.
+1. Open the Netlify URL.
 2. Sign in:
    - Tech: `tech` / `tech123`
    - Admin: `admin` / `admin123`
 3. Create an order → Accession → move to testing → enter results → Report.
 4. If login fails with a network/CORS error:
-   - Confirm `NEXT_PUBLIC_API_URL` is correct and you **redeployed** Vercel after setting it.
-   - Confirm `CORS_ALLOWED_ORIGINS` matches the Vercel origin exactly.
+   - Confirm `NEXT_PUBLIC_API_URL` is correct and you **redeployed** Netlify after setting it.
+   - Confirm `CORS_ALLOWED_ORIGINS` matches the Netlify origin exactly.
 5. If the first load is slow, wait ~1 minute (Render cold start) and retry.
 
 ---
@@ -166,7 +170,7 @@ In `README.md` (top of the file), add:
 ```markdown
 ## Live demo
 
-- App: https://YOUR-APP.vercel.app
+- App: https://YOUR-APP.netlify.app
 - API health: https://YOUR-API.onrender.com/api/health
 
 Demo users: `tech` / `tech123`, `admin` / `admin123` (demo only).
@@ -192,8 +196,9 @@ Then commit and push.
 | Render build fails | Root Directory must be `backend`; Runtime = Docker |
 | `/api/health` 502 / spin | Wait for cold start; check Logs for DB connection errors |
 | Neon connection refused | Use **pooled** host (`-pooler`) and `sslmode=require` |
-| Vercel UI loads but API calls fail | Rebuild after setting `NEXT_PUBLIC_API_URL` |
-| CORS error in browser console | `CORS_ALLOWED_ORIGINS` must equal the Vercel URL exactly |
+| Netlify UI loads but API calls fail | Rebuild after setting `NEXT_PUBLIC_API_URL` |
+| CORS error in browser console | `CORS_ALLOWED_ORIGINS` must equal the Netlify URL exactly |
+| Netlify Next build fails | Ensure `netlify.toml` is on `main`; build uses `next build` (no turbopack) |
 | Login 401 with seed users | Ensure `SEED_DEMO_USERS=true` on first boot; check Logs for seeder |
 
 ---
