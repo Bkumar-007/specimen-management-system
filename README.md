@@ -1,6 +1,6 @@
 # Specimen Management System
 
-Portfolio lab workflow app: **order → accession → status tracking → results**, with audit logging and a **simulated instrument (analyzer) interface**.
+Portfolio lab workflow app: **order â†’ accession â†’ status tracking â†’ results**, with audit logging and a **simulated instrument (analyzer) interface**.
 
 > Fictional demo data only. Not affiliated with STARLIMS, Outreach, or any commercial LIMS.
 
@@ -83,8 +83,8 @@ Covers the status transition rules, the full order-to-reported workflow over HTT
 ## Status rules
 
 ```text
-COLLECTED → RECEIVED → IN_TESTING → RESULTED → REPORTED      (no skipping, no going back)
-any non-final state → CANCELLED | REJECTED                   (admin only, reason required)
+COLLECTED â†’ RECEIVED â†’ IN_TESTING â†’ RESULTED â†’ REPORTED      (no skipping, no going back)
+any non-final state â†’ CANCELLED | REJECTED                   (admin only, reason required)
 ```
 
 - Results can only be entered from `RECEIVED` or `IN_TESTING`; saving results moves the specimen to `RESULTED`.
@@ -98,12 +98,12 @@ All endpoints except login, health and instrument ingest need `Authorization: Be
 
 | Method | Path | Notes |
 |--------|------|-------|
-| POST | `/api/auth/login` | `{username, password}` → `{token, username, role}` |
+| POST | `/api/auth/login` | `{username, password}` â†’ `{token, username, role}` |
 | GET / POST | `/api/clients` | POST admin only |
 | GET / POST | `/api/tests` | test catalog; POST admin only |
 | GET / POST | `/api/orders` | GET `?q=` (order no., MRN, name) `&status=`; POST `{clientId, testIds[], patient{mrn, firstName, lastName, dateOfBirth, sex}}` |
 | GET | `/api/orders/{id}` | order detail with specimens |
-| POST | `/api/orders/{id}/specimens` | accession: `{tubeType, collectedAt?, markReceived?}` → barcode generated |
+| POST | `/api/orders/{id}/specimens` | accession: `{tubeType, collectedAt?, markReceived?}` â†’ barcode generated |
 | GET | `/api/specimens` | `?barcode=&patient=&status=&orderId=` |
 | GET | `/api/specimens/{id}` | detail incl. results and allowed next statuses |
 | GET | `/api/specimens/{id}/timeline` | audit entries for the specimen |
@@ -133,7 +133,7 @@ The message is a simple JSON format designed for this project. It is not HL7 or 
 ## Demo script (happy path)
 
 1. Sign in as `tech` / `tech123`.
-2. **Orders → New order**: pick a client, enter a fictional patient (see [docs/SAMPLE_DATA.md](./docs/SAMPLE_DATA.md)), tick CBC, create.
+2. **Orders â†’ New order**: pick a client, enter a fictional patient (see [docs/SAMPLE_DATA.md](./docs/SAMPLE_DATA.md)), tick CBC, create.
 3. On the order page, **Accession** the specimen. A barcode such as `SPC26111700123` appears and the status is `RECEIVED`.
 4. Open the specimen and click **Move to IN TESTING**.
 5. Enter results (for example WBC 11.9, flag abnormal) and save, or paste the barcode into the **Instrument** page and send the sample message. Status becomes `RESULTED`.
@@ -143,10 +143,12 @@ The message is a simple JSON format designed for this project. It is not HL7 or 
 
 ## Deploying (optional)
 
-- **Backend** (Render, Railway, Azure App Service, or any container host): build with `mvn -DskipTests package`, run `java -jar target/specimen-management-0.0.1-SNAPSHOT.jar`. Set `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (long random string), `INSTRUMENT_API_KEY`, `SEED_DEMO_USERS=false`, and `CORS_ALLOWED_ORIGINS` (the frontend URL).
-- **Frontend** (Vercel, Netlify, Render static/node): set `NEXT_PUBLIC_API_URL` to the backend URL, then `npm run build && npm start`.
-- Neon free databases suspend when idle, so the first request after a pause can take a few seconds.
-- Hibernate `ddl-auto: update` is fine for a demo; use migrations (Flyway) before treating the data as long-lived.
+**Step-by-step (Render + Vercel + Neon):** see [docs/DEPLOY.md](./docs/DEPLOY.md).
+
+- **Backend** (Render Docker, Railway, Azure, etc.): use `backend/Dockerfile`, or `mvn -DskipTests package` then `java -jar target/specimen-management-0.0.1-SNAPSHOT.jar`. Set `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `INSTRUMENT_API_KEY`, `CORS_ALLOWED_ORIGINS`, and `SEED_DEMO_USERS`.
+- **Frontend** (Vercel / Netlify): set `NEXT_PUBLIC_API_URL` to the backend URL, then build.
+- Neon and free Render both sleep when idle — first request after a pause can take ~30–60s.
+- Hibernate `ddl-auto: update` is fine for a demo; use Flyway before treating data as long-lived.
 
 ## Docs
 
