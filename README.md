@@ -1,6 +1,7 @@
 # Specimen Management System
 
 [![CI](https://github.com/Bkumar-007/specimen-management-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Bkumar-007/specimen-management-system/actions/workflows/ci.yml)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/af03c006-98d7-4775-abd4-b6aee9af7fbf/deploy-status)](https://app.netlify.com/projects/lab-workflow-sms/deploys)
 
 Portfolio lab workflow app: **order → accession → status tracking → results**, with audit logging and a **simulated instrument (analyzer) interface**.
 

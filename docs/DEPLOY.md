@@ -122,13 +122,14 @@ If it fails: open **Logs** on Render. Common issues = bad `DB_URL`, wrong Root D
 | `NEXT_PUBLIC_API_URL` | `https://specimen-sms-api.onrender.com` *(your Render URL, no trailing slash)* |
 
 6. Click **Deploy site**. Wait ~2–4 minutes.
-7. Copy the site URL, e.g.:
+7. Optional — show Netlify status on GitHub **commits**: **Project configuration** → **Notifications** → **Deploy notifications** → add **GitHub commit status** for deploy succeeded/failed. Push to `main` (or open a PR) and the status appears under Checks on that commit.
+8. Copy the site URL, e.g.:
 
 ```text
 https://random-name-123456.netlify.app
 ```
 
-8. Optional: **Site configuration** → **Domain management** → **Options** → **Edit site name**  
+9. Optional: **Site configuration** → **Domain management** → **Options** → **Edit site name**  
    Example: `specimen-sms` → `https://specimen-sms.netlify.app`  
    Later you can attach a custom domain (e.g. `sms.yourname.dev`) so it does not end with `.netlify.app`.
 
