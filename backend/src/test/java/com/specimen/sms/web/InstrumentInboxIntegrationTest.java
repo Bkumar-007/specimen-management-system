@@ -2,9 +2,9 @@ package com.specimen.sms.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.specimen.sms.application.InstrumentInboxWatcher;
-import com.specimen.sms.application.OrderService;
-import com.specimen.sms.application.SpecimenService;
+import com.specimen.sms.application.instrument.InstrumentInboxWatcher;
+import com.specimen.sms.application.order.OrderService;
+import com.specimen.sms.application.specimen.SpecimenService;
 import com.specimen.sms.domain.ClientRepository;
 import com.specimen.sms.domain.SpecimenStatus;
 import com.specimen.sms.domain.TestCatalogRepository;

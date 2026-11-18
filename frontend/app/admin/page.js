@@ -1,10 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api, getUser } from "../../lib/api";
-import { toast } from "../../lib/toast";
-import AppShell from "../components/AppShell";
-import { EmptyState, ErrorNote, Skeleton } from "../components/ui";
+import { getUser } from "@utils/api";
+import { toast } from "@utils/toast";
+import {
+  createClient,
+  createTest,
+  listClients,
+  listTests,
+} from "@store/reference/referenceActions";
+import AppShell from "@component/layout/AppShell";
+import { EmptyState, ErrorNote, Skeleton } from "@component/common/ui";
 
 export default function AdminPage() {
   const [clients, setClients] = useState([]);
@@ -15,7 +21,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
-    Promise.all([api("/api/clients"), api("/api/tests")])
+    Promise.all([listClients(), listTests()])
       .then(([c, t]) => {
         setClients(c);
         setTests(t);
@@ -33,10 +39,10 @@ export default function AdminPage() {
     load();
   }, [load]);
 
-  async function add(path, body, reset, label) {
+  async function add(saveFn, body, reset, label) {
     setError("");
     try {
-      await api(path, { method: "POST", body });
+      await saveFn(body);
       reset();
       toast(`${label} saved`);
       load();
@@ -62,7 +68,7 @@ export default function AdminPage() {
             className="form"
             onSubmit={(e) => {
               e.preventDefault();
-              add("/api/clients", client, () => setClient({ code: "", name: "" }), "Client");
+              add(createClient, client, () => setClient({ code: "", name: "" }), "Client");
             }}
           >
             <div className="row">
@@ -84,7 +90,7 @@ export default function AdminPage() {
             className="form"
             onSubmit={(e) => {
               e.preventDefault();
-              add("/api/tests", test, () => setTest({ code: "", name: "", tubeType: "" }), "Test");
+              add(createTest, test, () => setTest({ code: "", name: "", tubeType: "" }), "Test");
             }}
           >
             <div className="row">

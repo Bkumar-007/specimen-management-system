@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "../../lib/api";
+import { api } from "@utils/api";
+import { routesMapping } from "@utils/apiRoutes";
 
 /**
  * Global keyboard-first barcode lookup.
@@ -35,7 +36,7 @@ export default function BarcodeScan() {
     setBusy(true);
     setHint("");
     try {
-      const page = await api("/api/specimens", { params: { barcode, size: 10 } });
+      const page = await api(routesMapping.specimen.List, { params: { barcode, size: 10 } });
       const exact = (page.content || []).find((s) => s.barcode.toLowerCase() === barcode.toLowerCase());
       if (exact) {
         setQ("");

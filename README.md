@@ -28,7 +28,9 @@ flowchart LR
     AUDIT --> DB
 ```
 
-Layers (`backend/src/main/java/com/specimen/sms`): `domain` (entities, repositories), `application` (services, status rules, instrument ingest), `web` (controllers, DTOs, error handler), `security`, `config`.
+Backend layers (`backend/src/main/java/com/specimen/sms`): `domain` (entities, repositories), `application/{order,specimen,audit,instrument,referencedata,common}`, `web` (controllers, DTOs), `security`, `config`.
+
+Frontend mirrors that by domain: `utils/apiRoutes` (API paths), `store/{order,specimen,reference}` (actions + types), `src/component/{common,layout}`, `app/` (pages).
 
 ## Prerequisites
 
@@ -117,7 +119,9 @@ All endpoints except login, health and instrument ingest need `Authorization: Be
 | GET / POST | `/api/tests` | test catalog; POST admin only |
 | GET / POST | `/api/orders` | GET `?q=` (order no., MRN, name) `&status=`; POST `{clientId, testIds[], patient{mrn, firstName, lastName, dateOfBirth, sex}}` |
 | GET | `/api/orders/{id}` | order detail with specimens |
-| POST | `/api/orders/{id}/specimens` | accession: `{tubeType, collectedAt?, markReceived?}` Ã¢â€ â€™ barcode generated |
+| GET | `/api/orders/{id}/timeline` | order + specimen audit history (full lab statuses) |
+| DELETE | `/api/orders/{id}` | only when no specimens (still ORDERED); else 409 |
+| POST | `/api/orders/{id}/specimens` | accession: `{tubeType, collectedAt?, markReceived?}` → barcode generated |
 | GET | `/api/specimens` | Paginated: `?barcode=&patient=&status=&from=&to=&needsAction=&page=&size=` → `{content, page, size, totalElements, totalPages}` |
 | GET | `/api/specimens/{id}` | detail incl. results and allowed next statuses |
 | GET | `/api/specimens/{id}/timeline` | audit entries for the specimen |

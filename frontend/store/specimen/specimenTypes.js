@@ -1,0 +1,16 @@
+export const SPECIMEN_STATUSES = [
+  "COLLECTED",
+  "RECEIVED",
+  "IN_TESTING",
+  "RESULTED",
+  "REPORTED",
+  "CANCELLED",
+  "REJECTED",
+];
+
+export const ACTIONABLE_STATUSES = [
+  "COLLECTED",
+  "RECEIVED",
+  "IN_TESTING",
+  "RESULTED",
+];

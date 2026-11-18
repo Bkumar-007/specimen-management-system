@@ -48,7 +48,7 @@ export class ApiError extends Error {
 
 /** Authenticated JSON request. Redirects to /login when the session is missing or expired. */
 export async function api(path, { method = "GET", body, params } = {}) {
-  const url = new URL(`${API_BASE}${path}`);
+  const url = new URL(`${API_BASE}${path.startsWith("/") ? path : `/${path}`}`);
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && String(v).trim() !== "") url.searchParams.set(k, v);
@@ -73,6 +73,10 @@ export async function api(path, { method = "GET", body, params } = {}) {
     clearSession();
     if (typeof window !== "undefined") window.location.href = "/login";
     throw new ApiError("Session expired", 401);
+  }
+
+  if (res.status === 204) {
+    return null;
   }
 
   const text = await res.text();

@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { api } from "../../../lib/api";
-import { toast } from "../../../lib/toast";
-import AppShell from "../../components/AppShell";
-import LabelPreview from "../../components/LabelPreview";
-import { BarcodeBlock, EmptyState, ErrorNote, Skeleton, StatusBadge, StatusSteps, fmt } from "../../components/ui";
+import { toast } from "@utils/toast";
+import {
+  addSpecimenResults,
+  changeSpecimenStatus,
+  loadSpecimenPage,
+} from "@store/specimen/specimenActions";
+import AppShell from "@component/layout/AppShell";
+import LabelPreview from "@component/common/LabelPreview";
+import { BarcodeBlock, EmptyState, ErrorNote, Skeleton, StatusBadge, StatusSteps, fmt } from "@component/common/ui";
 
 const emptyRow = () => ({ analyte: "", value: "", unit: "", flagged: false });
 
@@ -24,8 +28,8 @@ export default function SpecimenDetailPage() {
 
   const load = useCallback(() => {
     setLoadFailed(false);
-    return Promise.all([api(`/api/specimens/${id}`), api(`/api/specimens/${id}/timeline`)])
-      .then(([s, t]) => {
+    return loadSpecimenPage(id)
+      .then(({ specimen: s, timeline: t }) => {
         setSpecimen(s);
         setTimeline(t);
       })
@@ -65,9 +69,10 @@ export default function SpecimenDetailPage() {
       return;
     }
     run(async () => {
-      await api(`/api/specimens/${id}/status`, {
-        method: "PATCH",
-        body: { status, version: specimen.version, reason: negative ? reason : undefined },
+      await changeSpecimenStatus(id, {
+        status,
+        version: specimen.version,
+        reason: negative ? reason : undefined,
       });
       setReason("");
     }, `Status updated to ${status.replaceAll("_", " ")}`);
@@ -83,10 +88,7 @@ export default function SpecimenDetailPage() {
       return;
     }
     run(async () => {
-      await api(`/api/specimens/${id}/results`, {
-        method: "POST",
-        body: { version: specimen.version, results },
-      });
+      await addSpecimenResults(id, { version: specimen.version, results });
       setRows([emptyRow()]);
     }, "Results saved — specimen is RESULTED");
   }

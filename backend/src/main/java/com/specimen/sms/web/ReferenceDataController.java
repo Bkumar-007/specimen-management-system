@@ -1,6 +1,6 @@
 package com.specimen.sms.web;
 
-import com.specimen.sms.application.ReferenceDataService;
+import com.specimen.sms.application.referencedata.ReferenceDataService;
 import com.specimen.sms.web.dto.Dtos.ClientRequest;
 import com.specimen.sms.web.dto.Dtos.ClientView;
 import com.specimen.sms.web.dto.Dtos.TestRequest;

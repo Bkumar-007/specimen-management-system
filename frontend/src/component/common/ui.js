@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { subscribeToast } from "../../lib/toast";
+import { subscribeToast } from "@utils/toast";
 
 export function StatusBadge({ status }) {
   return <span className={`badge st-${status}`}>{status.replaceAll("_", " ")}</span>;

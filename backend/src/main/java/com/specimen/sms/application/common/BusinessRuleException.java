@@ -1,4 +1,4 @@
-package com.specimen.sms.application;
+package com.specimen.sms.application.common;
 
 /** A request that is well-formed but violates a domain rule (maps to HTTP 409). */
 public class BusinessRuleException extends RuntimeException {

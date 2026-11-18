@@ -1,9 +1,10 @@
 package com.specimen.sms.web;
 
-import com.specimen.sms.application.OrderService;
-import com.specimen.sms.application.SpecimenService;
+import com.specimen.sms.application.order.OrderService;
+import com.specimen.sms.application.specimen.SpecimenService;
 import com.specimen.sms.domain.SpecimenStatus;
 import com.specimen.sms.web.dto.Dtos.AccessionRequest;
+import com.specimen.sms.web.dto.Dtos.AuditView;
 import com.specimen.sms.web.dto.Dtos.CreateOrderRequest;
 import com.specimen.sms.web.dto.Dtos.OrderDetail;
 import com.specimen.sms.web.dto.Dtos.OrderSummary;
@@ -12,6 +13,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,6 +52,18 @@ public class OrderController {
     @GetMapping("/{id}")
     public OrderDetail get(@PathVariable Long id) {
         return orders.get(id);
+    }
+
+    @GetMapping("/{id}/timeline")
+    public List<AuditView> timeline(@PathVariable Long id) {
+        return orders.timeline(id);
+    }
+
+    /** Removes an order only when it has no specimens. */
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        orders.delete(id);
     }
 
     @PostMapping("/{id}/specimens")

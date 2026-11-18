@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "../../../lib/api";
-import AppShell from "../../components/AppShell";
-import { EmptyState, ErrorNote, Skeleton } from "../../components/ui";
+import { createOrder } from "@store/order/orderActions";
+import { listClients, listTests } from "@store/reference/referenceActions";
+import AppShell from "@component/layout/AppShell";
+import { EmptyState, ErrorNote, Skeleton } from "@component/common/ui";
 
 export default function NewOrderPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function NewOrderPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([api("/api/clients"), api("/api/tests")])
+    Promise.all([listClients(), listTests()])
       .then(([c, t]) => {
         setClients(c);
         setTests(t);
@@ -49,18 +50,15 @@ export default function NewOrderPage() {
     }
     setSaving(true);
     try {
-      const order = await api("/api/orders", {
-        method: "POST",
-        body: {
-          clientId: Number(form.clientId),
-          testIds: selected,
-          patient: {
-            mrn: form.mrn,
-            firstName: form.firstName,
-            lastName: form.lastName,
-            dateOfBirth: form.dateOfBirth,
-            sex: form.sex || null,
-          },
+      const order = await createOrder({
+        clientId: Number(form.clientId),
+        testIds: selected,
+        patient: {
+          mrn: form.mrn,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          dateOfBirth: form.dateOfBirth,
+          sex: form.sex || null,
         },
       });
       router.push(`/orders/${order.id}`);

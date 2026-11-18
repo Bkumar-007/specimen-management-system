@@ -1,5 +1,6 @@
-package com.specimen.sms.application;
+package com.specimen.sms.application.instrument;
 
+import com.specimen.sms.application.specimen.SpecimenService;
 import com.specimen.sms.web.dto.Dtos.IngestResponse;
 import com.specimen.sms.web.dto.Dtos.InstrumentMessage;
 import com.specimen.sms.web.dto.Dtos.InstrumentResult;

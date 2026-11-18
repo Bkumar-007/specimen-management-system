@@ -1,5 +1,6 @@
 package com.specimen.sms.web;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -209,6 +210,30 @@ class SpecimenWorkflowIntegrationTest {
         JsonNode current = getSpecimen(tech, id);
         setStatus(tech, id, "IN_TESTING", current.get("version").asLong())
                 .andExpect(status().isConflict()); // illegal: already IN_TESTING
+    }
+
+    @Test
+    void orderTimelineAndDelete() throws Exception {
+        String tech = login("tech", "tech123");
+
+        long emptyId = createOrder(tech, "MRN-5005");
+        mvc.perform(get("/api/orders/" + emptyId + "/timeline").header("Authorization", tech))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].action").value("CREATED"));
+        mvc.perform(delete("/api/orders/" + emptyId).header("Authorization", tech))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/orders/" + emptyId).header("Authorization", tech))
+                .andExpect(status().isNotFound());
+
+        long orderId = createOrder(tech, "MRN-5006");
+        accession(tech, orderId);
+        mvc.perform(get("/api/orders/" + orderId + "/timeline").header("Authorization", tech))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].action").value("CREATED"))
+                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(3)));
+        mvc.perform(delete("/api/orders/" + orderId).header("Authorization", tech))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("specimens")));
     }
 
     @Test

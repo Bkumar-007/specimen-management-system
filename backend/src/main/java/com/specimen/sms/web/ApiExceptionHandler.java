@@ -1,7 +1,7 @@
 package com.specimen.sms.web;
 
-import com.specimen.sms.application.BusinessRuleException;
-import com.specimen.sms.application.NotFoundException;
+import com.specimen.sms.application.common.BusinessRuleException;
+import com.specimen.sms.application.common.NotFoundException;
 import jakarta.persistence.OptimisticLockException;
 import java.util.LinkedHashMap;
 import java.util.Map;

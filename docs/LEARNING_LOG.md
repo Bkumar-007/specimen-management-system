@@ -48,3 +48,8 @@
 - Specimen search is paginated with date filters; empty/loading/error states tightened on main pages.
 - Optional accession **label print preview** (browser print; visual bars only — not a certified symbology).
 - Frontend stays JavaScript (no TypeScript migration).
+
+## Architecture alignment (HR-style)
+
+- Backend `application` split by domain: `order`, `specimen`, `audit`, `instrument`, `referencedata`, `common`.
+- Frontend: `utils/apiRoutes` (API paths), `store/{domain}` (actions + types), `src/component/{common,layout}`.

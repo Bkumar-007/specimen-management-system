@@ -1,6 +1,6 @@
 package com.specimen.sms.web;
 
-import com.specimen.sms.application.SpecimenService;
+import com.specimen.sms.application.specimen.SpecimenService;
 import com.specimen.sms.domain.SpecimenStatus;
 import com.specimen.sms.web.dto.Dtos.AddResultsRequest;
 import com.specimen.sms.web.dto.Dtos.AuditView;

@@ -1,16 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import { api } from "../../../lib/api";
-import { toast } from "../../../lib/toast";
-import AppShell from "../../components/AppShell";
-import LabelPreview from "../../components/LabelPreview";
-import { EmptyState, ErrorNote, Skeleton, StatusBadge, fmt } from "../../components/ui";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { accessionSpecimen, deleteOrder, getOrder } from "@store/order/orderActions";
+import { toast } from "@utils/toast";
+import AppShell from "@component/layout/AppShell";
+import LabelPreview from "@component/common/LabelPreview";
+import { EmptyState, ErrorNote, Skeleton, StatusBadge, fmt } from "@component/common/ui";
 
 export default function OrderDetailPage() {
   const { id } = useParams();
+  const router = useRouter();
   const [order, setOrder] = useState(null);
   const [error, setError] = useState("");
   const [tubeType, setTubeType] = useState("");
@@ -19,9 +20,9 @@ export default function OrderDetailPage() {
   const [labelSpecimen, setLabelSpecimen] = useState(null);
   const [loadFailed, setLoadFailed] = useState(false);
 
-  const load = useCallback(() => {
+  function load() {
     setLoadFailed(false);
-    return api(`/api/orders/${id}`)
+    return getOrder(id)
       .then((o) => {
         setOrder(o);
         setTubeType((t) => t || o.tests[0]?.tubeType || "");
@@ -30,21 +31,37 @@ export default function OrderDetailPage() {
         setError(e.message);
         setLoadFailed(true);
       });
-  }, [id]);
+  }
 
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    setLoadFailed(false);
+    setError("");
+    setOrder(null);
 
-  async function accession(e) {
+    getOrder(id)
+      .then((o) => {
+        if (cancelled) return;
+        setOrder(o);
+        setTubeType((t) => t || o.tests[0]?.tubeType || "");
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setError(e.message);
+        setLoadFailed(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  async function onAccession(e) {
     e.preventDefault();
     setError("");
     setBusy(true);
     try {
-      const specimen = await api(`/api/orders/${id}/specimens`, {
-        method: "POST",
-        body: { tubeType, markReceived },
-      });
+      const specimen = await accessionSpecimen(id, { tubeType, markReceived });
       toast(`Accessioned ${specimen.barcode}`);
       setLabelSpecimen(specimen);
       await load();
@@ -55,10 +72,41 @@ export default function OrderDetailPage() {
     }
   }
 
+  async function onDelete() {
+    if (!order) return;
+    if (order.specimens.length > 0) {
+      setError("Cannot delete an order that has specimens. Cancel or reject the specimens instead.");
+      return;
+    }
+    if (!window.confirm(`Delete order ${order.orderNumber}? This cannot be undone.`)) return;
+    setBusy(true);
+    setError("");
+    try {
+      await deleteOrder(id);
+      toast(`Deleted ${order.orderNumber}`);
+      router.push("/orders");
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
   const tubeOptions = order ? [...new Set(order.tests.map((t) => t.tubeType))] : [];
+  const canDelete = order && order.specimens.length === 0;
 
   return (
-    <AppShell title={order ? `Order ${order.orderNumber}` : "Order"} actions={<Link className="btn secondary" href="/orders">All orders</Link>}>
+    <AppShell
+      title={order ? `Order ${order.orderNumber}` : "Order"}
+      actions={
+        <>
+          <Link className="btn secondary" href={`/orders/${id}/history`}>History</Link>
+          {canDelete ? (
+            <button className="btn danger" type="button" disabled={busy} onClick={onDelete}>Delete</button>
+          ) : null}
+          <Link className="btn secondary" href={"/orders"}>All orders</Link>
+        </>
+      }
+    >
       <ErrorNote error={error} />
       <LabelPreview open={Boolean(labelSpecimen)} onClose={() => setLabelSpecimen(null)} specimen={labelSpecimen} />
       {!order && !loadFailed ? (
@@ -68,7 +116,7 @@ export default function OrderDetailPage() {
           <EmptyState
             title="Order not found"
             detail={error || "Check the order id or return to the list."}
-            href="/orders"
+            href={"/orders"}
             actionLabel="All orders"
           />
         </section>
@@ -97,7 +145,7 @@ export default function OrderDetailPage() {
 
           <section className="card">
             <h2>Accession specimen</h2>
-            <form className="row" onSubmit={accession}>
+            <form className="row" onSubmit={onAccession}>
               <label className="field">
                 Tube type
                 <input list="tubes" value={tubeType} onChange={(e) => setTubeType(e.target.value)} required />

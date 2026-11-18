@@ -1,4 +1,4 @@
-package com.specimen.sms.application;
+package com.specimen.sms.application.instrument;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.specimen.sms.web.dto.Dtos.InstrumentMessage;

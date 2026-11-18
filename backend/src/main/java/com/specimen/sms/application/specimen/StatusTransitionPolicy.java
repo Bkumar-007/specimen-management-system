@@ -1,4 +1,4 @@
-package com.specimen.sms.application;
+package com.specimen.sms.application.specimen;
 
 import static com.specimen.sms.domain.SpecimenStatus.CANCELLED;
 import static com.specimen.sms.domain.SpecimenStatus.COLLECTED;
@@ -9,6 +9,7 @@ import static com.specimen.sms.domain.SpecimenStatus.REJECTED;
 import static com.specimen.sms.domain.SpecimenStatus.REPORTED;
 import static com.specimen.sms.domain.SpecimenStatus.RESULTED;
 
+import com.specimen.sms.application.common.BusinessRuleException;
 import com.specimen.sms.domain.SpecimenStatus;
 import java.util.EnumSet;
 import java.util.Set;

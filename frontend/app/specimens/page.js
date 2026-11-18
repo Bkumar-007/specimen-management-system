@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api } from "../../lib/api";
-import AppShell from "../components/AppShell";
-import { EmptyState, ErrorNote, Pagination, Skeleton, StatusBadge, fmt } from "../components/ui";
+import { listSpecimens } from "@store/specimen/specimenActions";
+import { SPECIMEN_STATUSES } from "@store/specimen/specimenTypes";
+import AppShell from "@component/layout/AppShell";
+import { EmptyState, ErrorNote, Pagination, Skeleton, StatusBadge, fmt } from "@component/common/ui";
 
-const STATUSES = ["COLLECTED", "RECEIVED", "IN_TESTING", "RESULTED", "REPORTED", "CANCELLED", "REJECTED"];
 const PAGE_SIZE = 25;
 
 const emptyFilters = () => ({ barcode: "", patient: "", status: "", from: "", to: "" });
@@ -23,16 +23,14 @@ export default function SpecimensPage() {
     setResult(null);
     const active = Boolean(f.barcode?.trim() || f.patient?.trim() || f.status || f.from || f.to);
     setHasFilters(active);
-    api("/api/specimens", {
-      params: {
-        barcode: f.barcode,
-        patient: f.patient,
-        status: f.status || undefined,
-        from: f.from || undefined,
-        to: f.to || undefined,
-        page: pageIndex,
-        size: PAGE_SIZE,
-      },
+    listSpecimens({
+      barcode: f.barcode,
+      patient: f.patient,
+      status: f.status || undefined,
+      from: f.from || undefined,
+      to: f.to || undefined,
+      page: pageIndex,
+      size: PAGE_SIZE,
     })
       .then(setResult)
       .catch((e) => setError(e.message));
@@ -82,7 +80,7 @@ export default function SpecimensPage() {
           Status
           <select value={filters.status} onChange={set("status")}>
             <option value="">Any</option>
-            {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+            {SPECIMEN_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </label>
         <label className="field">

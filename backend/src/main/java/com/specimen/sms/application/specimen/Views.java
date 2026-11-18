@@ -1,4 +1,4 @@
-package com.specimen.sms.application;
+package com.specimen.sms.application.specimen;
 
 import com.specimen.sms.domain.AuditLog;
 import com.specimen.sms.domain.Client;

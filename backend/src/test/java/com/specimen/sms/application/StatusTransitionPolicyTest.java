@@ -12,6 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.specimen.sms.application.common.BusinessRuleException;
+import com.specimen.sms.application.specimen.StatusTransitionPolicy;
 import org.junit.jupiter.api.Test;
 
 class StatusTransitionPolicyTest {

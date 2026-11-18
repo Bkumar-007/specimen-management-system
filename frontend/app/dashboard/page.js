@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { api, getUser } from "../../lib/api";
-import AppShell from "../components/AppShell";
-import { EmptyState, ErrorNote, Skeleton, StatusBadge, fmt, nextActionLabel } from "../components/ui";
+import { getUser } from "@utils/api";
+import { getStats, listSpecimens } from "@store/specimen/specimenActions";
+import AppShell from "@component/layout/AppShell";
+import { EmptyState, ErrorNote, Skeleton, StatusBadge, fmt, nextActionLabel } from "@component/common/ui";
 
 const QUEUE_HINT = {
   LAB_TECH: "Specimens waiting for receive, testing, results, or report.",
@@ -22,8 +23,8 @@ export default function DashboardPage() {
     setLoading(true);
     setError("");
     Promise.all([
-      api("/api/stats"),
-      api("/api/specimens", { params: { needsAction: true, size: 50 } }),
+      getStats(),
+      listSpecimens({ needsAction: true, size: 50 }),
     ])
       .then(([s, page]) => {
         setStats(s);

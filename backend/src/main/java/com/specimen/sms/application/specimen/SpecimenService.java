@@ -1,5 +1,9 @@
-package com.specimen.sms.application;
+package com.specimen.sms.application.specimen;
 
+import com.specimen.sms.application.audit.AuditService;
+import com.specimen.sms.application.common.BusinessRuleException;
+import com.specimen.sms.application.common.CodeGenerator;
+import com.specimen.sms.application.common.NotFoundException;
 import com.specimen.sms.domain.LabOrder;
 import com.specimen.sms.domain.LabOrderRepository;
 import com.specimen.sms.domain.Specimen;

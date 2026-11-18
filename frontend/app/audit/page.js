@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api, getUser } from "../../lib/api";
-import AppShell from "../components/AppShell";
-import { EmptyState, ErrorNote, Skeleton, fmt } from "../components/ui";
+import { getUser } from "@utils/api";
+import { listAudit } from "@store/reference/referenceActions";
+import AppShell from "@component/layout/AppShell";
+import { EmptyState, ErrorNote, Skeleton, fmt } from "@component/common/ui";
 
 export default function AuditPage() {
   const [filters, setFilters] = useState({ entityType: "", entityId: "" });
@@ -13,7 +14,7 @@ export default function AuditPage() {
   const load = useCallback((f) => {
     setError("");
     setRows(null);
-    api("/api/audit", { params: f })
+    listAudit(f)
       .then(setRows)
       .catch((e) => setError(e.message));
   }, []);

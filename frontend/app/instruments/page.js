@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "../../lib/api";
-import { toast } from "../../lib/toast";
-import AppShell from "../components/AppShell";
-import { ErrorNote } from "../components/ui";
+import { toast } from "@utils/toast";
+import { ingestInstrument } from "@store/reference/referenceActions";
+import AppShell from "@component/layout/AppShell";
+import { ErrorNote } from "@component/common/ui";
 
 const SAMPLE = {
   instrumentId: "SIM-ANALYZER-1",
@@ -35,7 +35,7 @@ export default function InstrumentPage() {
     }
     setBusy(true);
     try {
-      const res = await api("/api/instruments/ingest", { method: "POST", body });
+      const res = await ingestInstrument(body);
       setOut(JSON.stringify(res, null, 2));
       toast(`Posted ${res.resultsPosted} result(s) to ${res.barcode}`);
     } catch (err) {

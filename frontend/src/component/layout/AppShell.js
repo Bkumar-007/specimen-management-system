@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { clearSession, getToken, getUser } from "../../lib/api";
-import BarcodeScan from "./BarcodeScan";
-import { ToastHost } from "./ui";
+import { clearSession, getToken, getUser } from "@utils/api";
+import BarcodeScan from "@component/common/BarcodeScan";
+import { ToastHost } from "@component/common/ui";
 
 const NAV = [
   { href: "/dashboard", label: "Work queue" },

@@ -1,5 +1,10 @@
-package com.specimen.sms.application;
+package com.specimen.sms.application.order;
 
+import com.specimen.sms.application.audit.AuditService;
+import com.specimen.sms.application.common.BusinessRuleException;
+import com.specimen.sms.application.common.CodeGenerator;
+import com.specimen.sms.application.common.NotFoundException;
+import com.specimen.sms.application.specimen.Views;
 import com.specimen.sms.domain.Client;
 import com.specimen.sms.domain.ClientRepository;
 import com.specimen.sms.domain.LabOrder;
@@ -7,10 +12,12 @@ import com.specimen.sms.domain.LabOrderRepository;
 import com.specimen.sms.domain.OrderTest;
 import com.specimen.sms.domain.Patient;
 import com.specimen.sms.domain.PatientRepository;
+import com.specimen.sms.domain.Specimen;
 import com.specimen.sms.domain.SpecimenStatus;
 import com.specimen.sms.domain.TestCatalog;
 import com.specimen.sms.domain.TestCatalogRepository;
 import com.specimen.sms.security.CurrentUser;
+import com.specimen.sms.web.dto.Dtos.AuditView;
 import com.specimen.sms.web.dto.Dtos.CreateOrderRequest;
 import com.specimen.sms.web.dto.Dtos.OrderDetail;
 import com.specimen.sms.web.dto.Dtos.OrderSummary;
@@ -21,6 +28,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import org.springframework.data.domain.PageRequest;
@@ -105,8 +113,51 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public OrderDetail get(Long id) {
-        LabOrder order = orders.findById(id).orElseThrow(() -> new NotFoundException("Order not found: " + id));
-        return Views.orderDetail(order, CurrentUser.isAdmin());
+        return Views.orderDetail(load(id), CurrentUser.isAdmin());
+    }
+
+    /**
+     * Order history: order audit plus each specimen's audit (barcode tagged), chronological.
+     * Statuses are the full lab set (ORDERED…REPORTED, CANCELLED/REJECTED).
+     */
+    @Transactional(readOnly = true)
+    public List<AuditView> timeline(Long id) {
+        LabOrder order = load(id);
+        List<AuditView> events = new ArrayList<>(audit.trail("ORDER", id).stream().map(Views::audit).toList());
+        for (Specimen s : order.getSpecimens()) {
+            String barcode = s.getBarcode();
+            audit.trail("SPECIMEN", s.getId()).stream()
+                    .map(a -> new AuditView(
+                            a.getId(),
+                            a.getEntityType(),
+                            a.getEntityId(),
+                            a.getAction(),
+                            "[" + barcode + "] " + (a.getDetails() == null ? "" : a.getDetails()),
+                            a.getPerformedBy(),
+                            a.getPerformedAt()))
+                    .forEach(events::add);
+        }
+        events.sort(Comparator
+                .comparing(AuditView::performedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(AuditView::id, Comparator.nullsLast(Comparator.naturalOrder())));
+        return events;
+    }
+
+    /** Hard-delete only when no specimens exist (still ORDERED). */
+    @Transactional
+    public void delete(Long id) {
+        LabOrder order = load(id);
+        if (!order.getSpecimens().isEmpty()) {
+            throw new BusinessRuleException(
+                    "Cannot delete an order that has specimens. Cancel or reject the specimens instead.");
+        }
+        String number = order.getOrderNumber();
+        audit.record("ORDER", order.getId(), "DELETED", "Order " + number + " removed");
+        orders.delete(order);
+    }
+
+    private LabOrder load(Long id) {
+        return orders.findById(id).orElseThrow(() -> new NotFoundException("Order not found: " + id));
     }
 
     private Patient findOrCreatePatient(PatientInput in) {

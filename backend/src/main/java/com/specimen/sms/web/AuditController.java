@@ -1,7 +1,7 @@
 package com.specimen.sms.web;
 
-import com.specimen.sms.application.AuditService;
-import com.specimen.sms.application.Views;
+import com.specimen.sms.application.audit.AuditService;
+import com.specimen.sms.application.specimen.Views;
 import com.specimen.sms.web.dto.Dtos.AuditView;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
