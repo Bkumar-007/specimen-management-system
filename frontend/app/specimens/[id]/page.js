@@ -40,7 +40,12 @@ export default function SpecimenDetailPage() {
       await load();
       if (successMessage) toast(successMessage);
     } catch (err) {
-      setError(err.message);
+      if (err.status === 409) {
+        setError(err.message || "Someone else updated this specimen. Refreshing…");
+        await load();
+      } else {
+        setError(err.message);
+      }
     } finally {
       setBusy(false);
     }
@@ -55,7 +60,7 @@ export default function SpecimenDetailPage() {
     run(async () => {
       await api(`/api/specimens/${id}/status`, {
         method: "PATCH",
-        body: { status, reason: negative ? reason : undefined },
+        body: { status, version: specimen.version, reason: negative ? reason : undefined },
       });
       setReason("");
     }, `Status updated to ${status.replaceAll("_", " ")}`);
@@ -71,7 +76,10 @@ export default function SpecimenDetailPage() {
       return;
     }
     run(async () => {
-      await api(`/api/specimens/${id}/results`, { method: "POST", body: { results } });
+      await api(`/api/specimens/${id}/results`, {
+        method: "POST",
+        body: { version: specimen.version, results },
+      });
       setRows([emptyRow()]);
     }, "Results saved — specimen is RESULTED");
   }

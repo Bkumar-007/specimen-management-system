@@ -104,6 +104,7 @@ any non-final state Ã¢â€ â€™ CANCELLED | REJECTED                   (
 - `REPORTED` requires at least one result. A lab admin may override with `{"override": true, "reason": "..."}` from `RECEIVED`/`IN_TESTING`.
 - `CANCELLED`, `REJECTED` and `REPORTED` are final.
 - An order's status is derived from its specimens (`ORDERED` until one is accessioned).
+- Concurrent status/result updates use optimistic locking (`version`); a stale update returns HTTP **409**.
 
 ## API
 
@@ -120,8 +121,8 @@ All endpoints except login, health and instrument ingest need `Authorization: Be
 | GET | `/api/specimens` | `?barcode=&patient=&status=&orderId=` |
 | GET | `/api/specimens/{id}` | detail incl. results and allowed next statuses |
 | GET | `/api/specimens/{id}/timeline` | audit entries for the specimen |
-| PATCH | `/api/specimens/{id}/status` | `{status, reason?, override?}` |
-| POST | `/api/specimens/{id}/results` | `{results:[{analyte, value, unit?, flagged?}]}` |
+| PATCH | `/api/specimens/{id}/status` | `{status, version, reason?, override?}` |
+| POST | `/api/specimens/{id}/results` | `{version, results:[{analyte, value, unit?, flagged?}]}` |
 | GET | `/api/audit` | `?entityType=&entityId=`, admin only |
 | GET | `/api/stats` | specimen counts by status |
 | POST | `/api/instruments/ingest` | analyzer message; JWT **or** `X-Instrument-Key` header |

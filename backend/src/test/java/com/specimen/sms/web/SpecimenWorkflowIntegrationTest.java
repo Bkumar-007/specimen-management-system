@@ -56,12 +56,38 @@ class SpecimenWorkflowIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON).content("{\"tubeType\":\"Lavender (EDTA)\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("RECEIVED"))
-                .andExpect(jsonPath("$.barcode").value(org.hamcrest.Matchers.startsWith("SPC"))));
+                .andExpect(jsonPath("$.barcode").value(org.hamcrest.Matchers.startsWith("SPC")))
+                .andExpect(jsonPath("$.version").exists()));
     }
 
-    private ResultActions setStatus(String auth, long specimenId, String statusJson) throws Exception {
+    private JsonNode getSpecimen(String auth, long specimenId) throws Exception {
+        return read(mvc.perform(get("/api/specimens/" + specimenId).header("Authorization", auth))
+                .andExpect(status().isOk()));
+    }
+
+    private ResultActions setStatus(String auth, long specimenId, String status, long version) throws Exception {
+        return setStatus(auth, specimenId, status, version, null, null);
+    }
+
+    private ResultActions setStatus(String auth, long specimenId, String status, long version, String reason)
+            throws Exception {
+        return setStatus(auth, specimenId, status, version, reason, null);
+    }
+
+    private ResultActions setStatus(
+            String auth, long specimenId, String status, long version, String reason, Boolean override)
+            throws Exception {
+        StringBuilder body = new StringBuilder("{\"status\":\"").append(status)
+                .append("\",\"version\":").append(version);
+        if (reason != null) {
+            body.append(",\"reason\":\"").append(reason).append('"');
+        }
+        if (override != null) {
+            body.append(",\"override\":").append(override);
+        }
+        body.append('}');
         return mvc.perform(patch("/api/specimens/" + specimenId + "/status").header("Authorization", auth)
-                .contentType(MediaType.APPLICATION_JSON).content(statusJson));
+                .contentType(MediaType.APPLICATION_JSON).content(body.toString()));
     }
 
     @Test
@@ -73,33 +99,38 @@ class SpecimenWorkflowIntegrationTest {
         JsonNode specimen = accession(tech, orderId);
         long id = specimen.get("id").asLong();
         String barcode = specimen.get("barcode").asText();
+        long version = specimen.get("version").asLong();
 
-        setStatus(tech, id, "{\"status\":\"IN_TESTING\"}")
-                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("IN_TESTING"));
+        specimen = read(setStatus(tech, id, "IN_TESTING", version)
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("IN_TESTING")));
+        version = specimen.get("version").asLong();
 
         // cannot report without results
-        setStatus(tech, id, "{\"status\":\"REPORTED\"}").andExpect(status().isConflict());
+        setStatus(tech, id, "REPORTED", version).andExpect(status().isConflict());
 
-        mvc.perform(post("/api/specimens/" + id + "/results").header("Authorization", tech)
+        specimen = read(mvc.perform(post("/api/specimens/" + id + "/results").header("Authorization", tech)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"results\":[{\"analyte\":\"WBC\",\"value\":\"11.9\",\"unit\":\"10^3/uL\",\"flagged\":true},"
+                        .content("{\"version\":" + version
+                                + ",\"results\":[{\"analyte\":\"WBC\",\"value\":\"11.9\",\"unit\":\"10^3/uL\",\"flagged\":true},"
                                 + "{\"analyte\":\"HGB\",\"value\":\"13.8\",\"unit\":\"g/dL\"}]}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("RESULTED"))
                 .andExpect(jsonPath("$.results.length()").value(2))
-                .andExpect(jsonPath("$.results[0].flagged").value(true));
+                .andExpect(jsonPath("$.results[0].flagged").value(true)));
+        version = specimen.get("version").asLong();
 
         // results cannot be entered twice
         mvc.perform(post("/api/specimens/" + id + "/results").header("Authorization", tech)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"results\":[{\"analyte\":\"PLT\",\"value\":\"250\"}]}"))
+                        .content("{\"version\":" + version + ",\"results\":[{\"analyte\":\"PLT\",\"value\":\"250\"}]}"))
                 .andExpect(status().isConflict());
 
-        setStatus(tech, id, "{\"status\":\"REPORTED\"}")
-                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("REPORTED"));
+        specimen = read(setStatus(tech, id, "REPORTED", version)
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("REPORTED")));
+        version = specimen.get("version").asLong();
 
         // terminal: no further change
-        setStatus(admin, id, "{\"status\":\"CANCELLED\",\"reason\":\"too late\"}").andExpect(status().isConflict());
+        setStatus(admin, id, "CANCELLED", version, "too late").andExpect(status().isConflict());
 
         mvc.perform(get("/api/specimens").param("barcode", barcode).header("Authorization", tech))
                 .andExpect(status().isOk())
@@ -131,15 +162,17 @@ class SpecimenWorkflowIntegrationTest {
         String admin = login("admin", "admin123");
 
         long orderId = createOrder(tech, "MRN-2002");
-        long id = accession(tech, orderId).get("id").asLong();
+        JsonNode specimen = accession(tech, orderId);
+        long id = specimen.get("id").asLong();
+        long version = specimen.get("version").asLong();
 
-        setStatus(tech, id, "{\"status\":\"REPORTED\"}").andExpect(status().isConflict());
-        setStatus(tech, id, "{\"status\":\"RESULTED\"}").andExpect(status().isConflict());
-        setStatus(tech, id, "{\"status\":\"REJECTED\",\"reason\":\"hemolyzed\"}")
+        setStatus(tech, id, "REPORTED", version).andExpect(status().isConflict());
+        setStatus(tech, id, "RESULTED", version).andExpect(status().isConflict());
+        setStatus(tech, id, "REJECTED", version, "hemolyzed")
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("admin")));
-        setStatus(admin, id, "{\"status\":\"REJECTED\"}").andExpect(status().isConflict()); // reason needed
-        setStatus(admin, id, "{\"status\":\"REJECTED\",\"reason\":\"hemolyzed\"}")
+        setStatus(admin, id, "REJECTED", version).andExpect(status().isConflict()); // reason needed
+        setStatus(admin, id, "REJECTED", version, "hemolyzed")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REJECTED"))
                 .andExpect(jsonPath("$.statusReason").value("hemolyzed"));
@@ -152,6 +185,27 @@ class SpecimenWorkflowIntegrationTest {
                         .content("{\"code\":\"X1\",\"name\":\"New Clinic\"}"))
                 .andExpect(status().isCreated());
         mvc.perform(get("/api/orders")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void staleVersionReturnsConflict() throws Exception {
+        String tech = login("tech", "tech123");
+        long orderId = createOrder(tech, "MRN-4004");
+        JsonNode specimen = accession(tech, orderId);
+        long id = specimen.get("id").asLong();
+        long staleVersion = specimen.get("version").asLong();
+
+        read(setStatus(tech, id, "IN_TESTING", staleVersion)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("IN_TESTING")));
+
+        setStatus(tech, id, "RESULTED", staleVersion)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("someone else")));
+
+        JsonNode current = getSpecimen(tech, id);
+        setStatus(tech, id, "IN_TESTING", current.get("version").asLong())
+                .andExpect(status().isConflict()); // illegal: already IN_TESTING
     }
 
     @Test

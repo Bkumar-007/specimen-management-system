@@ -62,7 +62,7 @@ public class SpecimenService {
         } else {
             s.setStatus(SpecimenStatus.COLLECTED);
         }
-        specimens.save(s);
+        specimens.saveAndFlush(s);
         order.getSpecimens().add(s);
 
         audit.record("SPECIMEN", s.getId(), "ACCESSIONED",
@@ -74,6 +74,7 @@ public class SpecimenService {
     @Transactional
     public SpecimenView changeStatus(Long id, StatusChangeRequest request) {
         Specimen s = load(id);
+        assertVersion(s, request.version());
         boolean admin = CurrentUser.isAdmin();
         boolean override = Boolean.TRUE.equals(request.override());
         SpecimenStatus from = s.getStatus();
@@ -89,6 +90,7 @@ public class SpecimenService {
         if (reason != null) {
             s.setStatusReason(reason);
         }
+        specimens.saveAndFlush(s); // flush so @Version is incremented before the response is built
         audit.record("SPECIMEN", s.getId(), "STATUS_CHANGED",
                 from + " -> " + to + (override ? " (admin override)" : "") + (reason != null ? ": " + reason : ""));
         return Views.specimen(s, admin);
@@ -96,14 +98,25 @@ public class SpecimenService {
 
     /** Adds results from a person (UI/API); attributed to the current user. */
     @Transactional
-    public SpecimenView addResults(Long id, List<ResultInput> inputs) {
-        return addResults(id, inputs, CurrentUser.username());
+    public SpecimenView addResults(Long id, Long version, List<ResultInput> inputs) {
+        return addResults(id, version, inputs, CurrentUser.username());
     }
 
-    /** Adds results on behalf of {@code actor} (a username or an instrument id) and moves the specimen to RESULTED. */
+    /**
+     * Adds results on behalf of {@code actor} (instrument ingest). Uses the current DB version so
+     * analyzers do not need a client-supplied token; JPA {@code @Version} still guards concurrent writes.
+     */
     @Transactional
     public SpecimenView addResults(Long id, List<ResultInput> inputs, String actor) {
         Specimen s = load(id);
+        return addResults(id, s.getVersion(), inputs, actor);
+    }
+
+    /** Adds results on behalf of {@code actor} and moves the specimen to RESULTED. */
+    @Transactional
+    public SpecimenView addResults(Long id, Long version, List<ResultInput> inputs, String actor) {
+        Specimen s = load(id);
+        assertVersion(s, version);
         StatusTransitionPolicy.validateResultEntry(s.getStatus());
         SpecimenStatus from = s.getStatus();
 
@@ -119,6 +132,7 @@ public class SpecimenService {
             s.addResult(r);
         }
         s.setStatus(SpecimenStatus.RESULTED);
+        specimens.saveAndFlush(s); // flush so @Version is incremented before the response is built
 
         String analytes = inputs.stream().map(i -> i.analyte().trim()).toList().toString();
         audit.record("SPECIMEN", s.getId(), "RESULTS_ADDED", inputs.size() + " result(s): " + analytes, actor);
@@ -194,5 +208,12 @@ public class SpecimenService {
             code = "SPC" + day + CodeGenerator.digits(5);
         } while (specimens.existsByBarcode(code));
         return code;
+    }
+
+    private void assertVersion(Specimen s, Long expected) {
+        if (expected == null || !expected.equals(s.getVersion())) {
+            throw new BusinessRuleException(
+                    "Specimen was updated by someone else. Refresh and try again.");
+        }
     }
 }

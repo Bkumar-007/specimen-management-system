@@ -17,6 +17,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "specimens")
@@ -49,6 +50,10 @@ public class Specimen {
 
     @Column(nullable = false)
     private Instant createdAt;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
     @OneToMany(mappedBy = "specimen", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id ASC")
@@ -124,6 +129,10 @@ public class Specimen {
 
     public List<SpecimenResult> getResults() {
         return results;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     public void addResult(SpecimenResult result) {

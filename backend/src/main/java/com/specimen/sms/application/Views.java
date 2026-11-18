@@ -58,6 +58,7 @@ public final class Views {
                 s.getStatusReason(),
                 List.copyOf(StatusTransitionPolicy.allowedNext(s.getStatus(), admin)),
                 s.getResults().stream().map(Views::result).toList(),
+                s.getVersion(),
                 s.getCreatedAt());
     }
 

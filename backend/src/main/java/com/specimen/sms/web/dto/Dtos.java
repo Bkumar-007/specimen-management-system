@@ -91,6 +91,7 @@ public final class Dtos {
 
     public record StatusChangeRequest(
             @NotNull SpecimenStatus status,
+            @NotNull Long version,
             @Size(max = 500) String reason,
             Boolean override) {
     }
@@ -102,7 +103,9 @@ public final class Dtos {
             Boolean flagged) {
     }
 
-    public record AddResultsRequest(@NotEmpty List<@Valid ResultInput> results) {
+    public record AddResultsRequest(
+            @NotNull Long version,
+            @NotEmpty List<@Valid ResultInput> results) {
     }
 
     public record ResultView(
@@ -123,6 +126,7 @@ public final class Dtos {
             String statusReason,
             List<SpecimenStatus> allowedNext,
             List<ResultView> results,
+            Long version,
             Instant createdAt) {
     }
 

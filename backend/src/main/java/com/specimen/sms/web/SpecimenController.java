@@ -60,7 +60,7 @@ public class SpecimenController {
     @PostMapping("/specimens/{id}/results")
     @ResponseStatus(HttpStatus.CREATED)
     public SpecimenView addResults(@PathVariable Long id, @Valid @RequestBody AddResultsRequest request) {
-        return specimens.addResults(id, request.results());
+        return specimens.addResults(id, request.version(), request.results());
     }
 
     @GetMapping("/stats")

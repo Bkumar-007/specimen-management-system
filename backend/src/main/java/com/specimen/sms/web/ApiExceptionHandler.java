@@ -2,6 +2,7 @@ package com.specimen.sms.web;
 
 import com.specimen.sms.application.BusinessRuleException;
 import com.specimen.sms.application.NotFoundException;
+import jakarta.persistence.OptimisticLockException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -62,9 +64,19 @@ public class ApiExceptionHandler {
         return body(HttpStatus.FORBIDDEN, "You do not have permission to do this", null);
     }
 
+    @ExceptionHandler({ObjectOptimisticLockingFailureException.class, OptimisticLockException.class})
+    ResponseEntity<Map<String, Object>> optimisticLock(Exception e) {
+        return body(HttpStatus.CONFLICT,
+                "Specimen was updated by someone else. Refresh and try again.", null);
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<Map<String, Object>> integrity(DataIntegrityViolationException e) {
         log.warn("Data integrity violation", e);
+        String msg = e.getMostSpecificCause() != null ? e.getMostSpecificCause().getMessage() : null;
+        if (msg != null && msg.toLowerCase().contains("barcode")) {
+            return body(HttpStatus.CONFLICT, "Barcode already exists", null);
+        }
         return body(HttpStatus.CONFLICT, "Request conflicts with existing data", null);
     }
 
