@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { clearSession, getToken, getUser } from "../../lib/api";
+import BarcodeScan from "./BarcodeScan";
 import { ToastHost } from "./ui";
 
 const NAV = [
-  { href: "/dashboard", label: "Dashboard" },
+  { href: "/dashboard", label: "Work queue" },
   { href: "/orders", label: "Orders" },
   { href: "/specimens", label: "Specimens" },
   { href: "/instruments", label: "Instrument" },
@@ -86,6 +87,7 @@ export default function AppShell({ title, actions, children }) {
             <button className="btn secondary" type="button" onClick={logout}>Sign out</button>
           </div>
         </nav>
+        <BarcodeScan />
         <div className="userBox desktopOnly">
           <span className="muted">{user.username} ({user.role})</span>
           <button className="btn secondary" type="button" onClick={logout}>Sign out</button>

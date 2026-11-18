@@ -39,4 +39,12 @@
 
 - Integration tests run on H2 in PostgreSQL mode so they never touch Neon.
 - A column named `value` is reserved in some databases, so the result column is `result_value`.
-- Left out on purpose: migrations (Flyway), refresh tokens, QC and billing.
+- Left out on purpose: refresh tokens, QC and billing.
+
+## Portfolio Phase 4: Work-queue UI
+
+- Home is a **work queue** (`needsAction=true`) instead of a generic dashboard dump.
+- Global barcode **Scan** in the top bar (`/` to focus) for scan → open → act demos.
+- Specimen search is paginated with date filters; empty/loading/error states tightened on main pages.
+- Optional accession **label print preview** (browser print; visual bars only — not a certified symbology).
+- Frontend stays JavaScript (no TypeScript migration).

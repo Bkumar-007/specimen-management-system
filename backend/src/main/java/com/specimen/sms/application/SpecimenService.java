@@ -10,6 +10,7 @@ import com.specimen.sms.security.CurrentUser;
 import com.specimen.sms.web.dto.Dtos.AccessionRequest;
 import com.specimen.sms.web.dto.Dtos.AuditView;
 import com.specimen.sms.web.dto.Dtos.ResultInput;
+import com.specimen.sms.web.dto.Dtos.SpecimenPage;
 import com.specimen.sms.web.dto.Dtos.SpecimenView;
 import com.specimen.sms.web.dto.Dtos.StatsView;
 import com.specimen.sms.web.dto.Dtos.StatusChangeRequest;
@@ -19,9 +20,12 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -29,6 +33,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SpecimenService {
+
+    /** Statuses that still need bench action (work queue). */
+    public static final Set<SpecimenStatus> ACTIONABLE = EnumSet.of(
+            SpecimenStatus.COLLECTED,
+            SpecimenStatus.RECEIVED,
+            SpecimenStatus.IN_TESTING,
+            SpecimenStatus.RESULTED);
+
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final SpecimenRepository specimens;
     private final LabOrderRepository orders;
@@ -153,9 +166,24 @@ public class SpecimenService {
     }
 
     @Transactional(readOnly = true)
-    public List<SpecimenView> search(String barcode, String patient, SpecimenStatus status, Long orderId) {
+    public SpecimenPage search(
+            String barcode,
+            String patient,
+            SpecimenStatus status,
+            List<SpecimenStatus> statuses,
+            Long orderId,
+            LocalDate from,
+            LocalDate to,
+            boolean needsAction,
+            int page,
+            int size) {
         boolean admin = CurrentUser.isAdmin();
-        return specimens.findAll((root, query, cb) -> {
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(MAX_PAGE_SIZE, Math.max(1, size));
+
+        Set<SpecimenStatus> statusFilter = resolveStatuses(status, statuses, needsAction);
+
+        Page<Specimen> result = specimens.findAll((root, query, cb) -> {
             var order = root.join("labOrder");
             var p = order.join("patient");
             List<Predicate> ps = new ArrayList<>();
@@ -169,15 +197,46 @@ public class SpecimenService {
                         cb.like(cb.lower(p.get("firstName")), like),
                         cb.like(cb.lower(p.get("lastName")), like)));
             }
-            if (status != null) {
-                ps.add(cb.equal(root.get("status"), status));
+            if (!statusFilter.isEmpty()) {
+                ps.add(root.get("status").in(statusFilter));
             }
             if (orderId != null) {
                 ps.add(cb.equal(order.get("id"), orderId));
             }
+            if (from != null) {
+                ps.add(cb.greaterThanOrEqualTo(root.get("createdAt"), from.atStartOfDay().toInstant(ZoneOffset.UTC)));
+            }
+            if (to != null) {
+                ps.add(cb.lessThan(root.get("createdAt"), to.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)));
+            }
             return cb.and(ps.toArray(new Predicate[0]));
-        }, PageRequest.of(0, 200, Sort.by(Sort.Direction.DESC, "createdAt", "id")))
-                .getContent().stream().map(s -> Views.specimen(s, admin)).toList();
+        }, PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt", "id")));
+
+        List<SpecimenView> content = result.getContent().stream().map(s -> Views.specimen(s, admin)).toList();
+        return new SpecimenPage(content, result.getNumber(), result.getSize(), result.getTotalElements(),
+                result.getTotalPages());
+    }
+
+    private static Set<SpecimenStatus> resolveStatuses(
+            SpecimenStatus status, List<SpecimenStatus> statuses, boolean needsAction) {
+        Set<SpecimenStatus> filter = EnumSet.noneOf(SpecimenStatus.class);
+        if (status != null) {
+            filter.add(status);
+        }
+        if (statuses != null) {
+            for (SpecimenStatus s : statuses) {
+                if (s != null) {
+                    filter.add(s);
+                }
+            }
+        }
+        if (needsAction) {
+            if (filter.isEmpty()) {
+                return EnumSet.copyOf(ACTIONABLE);
+            }
+            filter.retainAll(ACTIONABLE);
+        }
+        return filter;
     }
 
     @Transactional(readOnly = true)

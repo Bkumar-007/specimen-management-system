@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "../../../lib/api";
 import { toast } from "../../../lib/toast";
 import AppShell from "../../components/AppShell";
+import LabelPreview from "../../components/LabelPreview";
 import { EmptyState, ErrorNote, Skeleton, StatusBadge, fmt } from "../../components/ui";
 
 export default function OrderDetailPage() {
@@ -15,14 +16,20 @@ export default function OrderDetailPage() {
   const [tubeType, setTubeType] = useState("");
   const [markReceived, setMarkReceived] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [labelSpecimen, setLabelSpecimen] = useState(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const load = useCallback(() => {
+    setLoadFailed(false);
     return api(`/api/orders/${id}`)
       .then((o) => {
         setOrder(o);
         setTubeType((t) => t || o.tests[0]?.tubeType || "");
       })
-      .catch((e) => setError(e.message));
+      .catch((e) => {
+        setError(e.message);
+        setLoadFailed(true);
+      });
   }, [id]);
 
   useEffect(() => {
@@ -39,6 +46,7 @@ export default function OrderDetailPage() {
         body: { tubeType, markReceived },
       });
       toast(`Accessioned ${specimen.barcode}`);
+      setLabelSpecimen(specimen);
       await load();
     } catch (err) {
       setError(err.message);
@@ -52,8 +60,18 @@ export default function OrderDetailPage() {
   return (
     <AppShell title={order ? `Order ${order.orderNumber}` : "Order"} actions={<Link className="btn secondary" href="/orders">All orders</Link>}>
       <ErrorNote error={error} />
-      {!order ? (
+      <LabelPreview open={Boolean(labelSpecimen)} onClose={() => setLabelSpecimen(null)} specimen={labelSpecimen} />
+      {!order && !loadFailed ? (
         <section className="card"><Skeleton rows={8} /></section>
+      ) : loadFailed && !order ? (
+        <section className="card">
+          <EmptyState
+            title="Order not found"
+            detail={error || "Check the order id or return to the list."}
+            href="/orders"
+            actionLabel="All orders"
+          />
+        </section>
       ) : (
         <>
           <div className="grid2">

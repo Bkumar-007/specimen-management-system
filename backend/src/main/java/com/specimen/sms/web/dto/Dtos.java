@@ -130,6 +130,15 @@ public final class Dtos {
             Instant createdAt) {
     }
 
+    /** Paginated specimen search / work-queue response. */
+    public record SpecimenPage(
+            List<SpecimenView> content,
+            int page,
+            int size,
+            long totalElements,
+            int totalPages) {
+    }
+
     // ---- audit ----
 
     public record AuditView(

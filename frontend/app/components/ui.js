@@ -99,7 +99,7 @@ export function ToastHost() {
   );
 }
 
-export function BarcodeBlock({ barcode }) {
+export function BarcodeBlock({ barcode, onPrint }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -118,9 +118,57 @@ export function BarcodeBlock({ barcode }) {
         <div className="barcodeLabel">Barcode</div>
         <div className="barcodeValue mono">{barcode}</div>
       </div>
-      <button className="btn secondary small" type="button" onClick={copy}>
-        {copied ? "Copied" : "Copy"}
+      <div className="actions">
+        <button className="btn secondary small" type="button" onClick={copy}>
+          {copied ? "Copied" : "Copy"}
+        </button>
+        {onPrint ? (
+          <button className="btn secondary small" type="button" onClick={onPrint}>
+            Print label
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+export function Pagination({ page, totalPages, totalElements, onPage }) {
+  if (totalPages <= 1) {
+    return totalElements > 0 ? (
+      <p className="muted paginationMeta">{totalElements} result{totalElements === 1 ? "" : "s"}</p>
+    ) : null;
+  }
+  return (
+    <div className="pagination">
+      <button className="btn secondary small" type="button" disabled={page <= 0} onClick={() => onPage(page - 1)}>
+        Previous
+      </button>
+      <span className="muted">
+        Page {page + 1} of {totalPages} · {totalElements} total
+      </span>
+      <button
+        className="btn secondary small"
+        type="button"
+        disabled={page + 1 >= totalPages}
+        onClick={() => onPage(page + 1)}
+      >
+        Next
       </button>
     </div>
   );
+}
+
+export function nextActionLabel(status) {
+  switch (status) {
+    case "COLLECTED":
+      return "Receive";
+    case "RECEIVED":
+      return "Start testing";
+    case "IN_TESTING":
+      return "Enter results";
+    case "RESULTED":
+      return "Report";
+    default:
+      return "Open";
+  }
 }

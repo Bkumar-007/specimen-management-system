@@ -6,7 +6,8 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "../../../lib/api";
 import { toast } from "../../../lib/toast";
 import AppShell from "../../components/AppShell";
-import { BarcodeBlock, ErrorNote, Skeleton, StatusBadge, StatusSteps, fmt } from "../../components/ui";
+import LabelPreview from "../../components/LabelPreview";
+import { BarcodeBlock, EmptyState, ErrorNote, Skeleton, StatusBadge, StatusSteps, fmt } from "../../components/ui";
 
 const emptyRow = () => ({ analyte: "", value: "", unit: "", flagged: false });
 
@@ -18,14 +19,20 @@ export default function SpecimenDetailPage() {
   const [reason, setReason] = useState("");
   const [rows, setRows] = useState([emptyRow()]);
   const [busy, setBusy] = useState(false);
+  const [printOpen, setPrintOpen] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const load = useCallback(() => {
+    setLoadFailed(false);
     return Promise.all([api(`/api/specimens/${id}`), api(`/api/specimens/${id}/timeline`)])
       .then(([s, t]) => {
         setSpecimen(s);
         setTimeline(t);
       })
-      .catch((e) => setError(e.message));
+      .catch((e) => {
+        setError(e.message);
+        setLoadFailed(true);
+      });
   }, [id]);
 
   useEffect(() => {
@@ -98,12 +105,22 @@ export default function SpecimenDetailPage() {
       actions={specimen ? <Link className="btn secondary" href={`/orders/${specimen.orderId}`}>Order {specimen.orderNumber}</Link> : null}
     >
       <ErrorNote error={error} />
-      {!specimen ? (
+      {!specimen && !loadFailed ? (
         <section className="card"><Skeleton rows={10} /></section>
+      ) : loadFailed && !specimen ? (
+        <section className="card">
+          <EmptyState
+            title="Specimen not found"
+            detail={error || "It may have been removed, or the link is wrong."}
+            href="/dashboard"
+            actionLabel="Back to work queue"
+          />
+        </section>
       ) : (
         <>
+          <LabelPreview open={printOpen} onClose={() => setPrintOpen(false)} specimen={specimen} />
           <section className="card">
-            <BarcodeBlock barcode={specimen.barcode} />
+            <BarcodeBlock barcode={specimen.barcode} onPrint={() => setPrintOpen(true)} />
             <h2>Status</h2>
             <StatusSteps status={specimen.status} />
             <div className="row" style={{ marginTop: "1rem" }}>

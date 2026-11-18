@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "../../../lib/api";
 import AppShell from "../../components/AppShell";
-import { ErrorNote } from "../../components/ui";
+import { EmptyState, ErrorNote, Skeleton } from "../../components/ui";
 
 export default function NewOrderPage() {
   const router = useRouter();
@@ -21,6 +21,7 @@ export default function NewOrderPage() {
   const [selected, setSelected] = useState([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([api("/api/clients"), api("/api/tests")])
@@ -29,7 +30,8 @@ export default function NewOrderPage() {
         setTests(t);
         if (c.length) setForm((f) => ({ ...f, clientId: String(c[0].id) }));
       })
-      .catch((e) => setError(e.message));
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
@@ -70,6 +72,19 @@ export default function NewOrderPage() {
 
   return (
     <AppShell title="New order">
+      <ErrorNote error={error} />
+      {loading ? (
+        <section className="card"><Skeleton rows={8} /></section>
+      ) : clients.length === 0 || tests.length === 0 ? (
+        <section className="card">
+          <EmptyState
+            title="Catalog not ready"
+            detail="Need at least one client and one test before creating an order. Ask a lab admin to seed Admin."
+            href="/admin"
+            actionLabel="Open admin"
+          />
+        </section>
+      ) : (
       <form className="form" onSubmit={submit}>
         <section className="card">
           <h2>Client</h2>
@@ -116,12 +131,12 @@ export default function NewOrderPage() {
           </div>
         </section>
 
-        <ErrorNote error={error} />
         <div className="actions">
           <button className="btn" type="submit" disabled={saving}>{saving ? "Saving…" : "Create order"}</button>
           <button className="btn secondary" type="button" onClick={() => router.push("/orders")}>Cancel</button>
         </div>
       </form>
+      )}
     </AppShell>
   );
 }

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api, getUser } from "../../lib/api";
 import { toast } from "../../lib/toast";
 import AppShell from "../components/AppShell";
-import { ErrorNote, Skeleton } from "../components/ui";
+import { EmptyState, ErrorNote, Skeleton } from "../components/ui";
 
 export default function AdminPage() {
   const [clients, setClients] = useState([]);
@@ -27,6 +27,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (getUser()?.role !== "LAB_ADMIN") {
       setError("Admin tools are available to lab admins only.");
+      setLoading(false);
       return;
     }
     load();
@@ -48,10 +49,15 @@ export default function AdminPage() {
     <AppShell title="Admin: clients and test catalog">
       <ErrorNote error={error} />
       {loading ? <section className="card"><Skeleton rows={6} /></section> : null}
+      {!loading ? (
       <div className="grid2">
         <section className="card">
           <h2>Clients</h2>
-          <ul>{clients.map((c) => <li key={c.id}><strong>{c.code}</strong> — {c.name}</li>)}</ul>
+          {clients.length === 0 ? (
+            <EmptyState title="No clients" detail="Add a clinic or ordering site below." />
+          ) : (
+            <ul>{clients.map((c) => <li key={c.id}><strong>{c.code}</strong> — {c.name}</li>)}</ul>
+          )}
           <form
             className="form"
             onSubmit={(e) => {
@@ -69,7 +75,11 @@ export default function AdminPage() {
 
         <section className="card">
           <h2>Test catalog</h2>
-          <ul>{tests.map((t) => <li key={t.id}><strong>{t.code}</strong> — {t.name} <span className="muted">[{t.tubeType}]</span></li>)}</ul>
+          {tests.length === 0 ? (
+            <EmptyState title="No tests" detail="Add catalog entries so techs can order panels." />
+          ) : (
+            <ul>{tests.map((t) => <li key={t.id}><strong>{t.code}</strong> — {t.name} <span className="muted">[{t.tubeType}]</span></li>)}</ul>
+          )}
           <form
             className="form"
             onSubmit={(e) => {
@@ -86,6 +96,7 @@ export default function AdminPage() {
           </form>
         </section>
       </div>
+      ) : null}
     </AppShell>
   );
 }

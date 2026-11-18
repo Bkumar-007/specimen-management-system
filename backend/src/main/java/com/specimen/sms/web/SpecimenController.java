@@ -4,11 +4,14 @@ import com.specimen.sms.application.SpecimenService;
 import com.specimen.sms.domain.SpecimenStatus;
 import com.specimen.sms.web.dto.Dtos.AddResultsRequest;
 import com.specimen.sms.web.dto.Dtos.AuditView;
+import com.specimen.sms.web.dto.Dtos.SpecimenPage;
 import com.specimen.sms.web.dto.Dtos.SpecimenView;
 import com.specimen.sms.web.dto.Dtos.StatsView;
 import com.specimen.sms.web.dto.Dtos.StatusChangeRequest;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,14 +35,23 @@ public class SpecimenController {
         this.specimens = specimens;
     }
 
-    /** Search by barcode, patient (MRN or name), status and/or order id. */
+    /**
+     * Search specimens with pagination and filters.
+     * {@code needsAction=true} limits to work-queue statuses (COLLECTED…RESULTED).
+     */
     @GetMapping("/specimens")
-    public List<SpecimenView> search(
+    public SpecimenPage search(
             @RequestParam(required = false) String barcode,
             @RequestParam(required = false) String patient,
             @RequestParam(required = false) SpecimenStatus status,
-            @RequestParam(required = false) Long orderId) {
-        return specimens.search(barcode, patient, status, orderId);
+            @RequestParam(required = false) List<SpecimenStatus> statuses,
+            @RequestParam(required = false) Long orderId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false, defaultValue = "false") boolean needsAction,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "25") int size) {
+        return specimens.search(barcode, patient, status, statuses, orderId, from, to, needsAction, page, size);
     }
 
     @GetMapping("/specimens/{id}")

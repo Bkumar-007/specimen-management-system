@@ -118,7 +118,7 @@ All endpoints except login, health and instrument ingest need `Authorization: Be
 | GET / POST | `/api/orders` | GET `?q=` (order no., MRN, name) `&status=`; POST `{clientId, testIds[], patient{mrn, firstName, lastName, dateOfBirth, sex}}` |
 | GET | `/api/orders/{id}` | order detail with specimens |
 | POST | `/api/orders/{id}/specimens` | accession: `{tubeType, collectedAt?, markReceived?}` Ã¢â€ â€™ barcode generated |
-| GET | `/api/specimens` | `?barcode=&patient=&status=&orderId=` |
+| GET | `/api/specimens` | Paginated: `?barcode=&patient=&status=&from=&to=&needsAction=&page=&size=` → `{content, page, size, totalElements, totalPages}` |
 | GET | `/api/specimens/{id}` | detail incl. results and allowed next statuses |
 | GET | `/api/specimens/{id}/timeline` | audit entries for the specimen |
 | PATCH | `/api/specimens/{id}/status` | `{status, version, reason?, override?}` |
@@ -146,14 +146,14 @@ The message is a simple JSON format designed for this project. It is not HL7 or 
 
 ## Demo script (happy path)
 
-1. Sign in as `tech` / `tech123`.
-2. **Orders Ã¢â€ â€™ New order**: pick a client, enter a fictional patient (see [docs/SAMPLE_DATA.md](./docs/SAMPLE_DATA.md)), tick CBC, create.
-3. On the order page, **Accession** the specimen. A barcode such as `SPC26111700123` appears and the status is `RECEIVED`.
-4. Open the specimen and click **Move to IN TESTING**.
-5. Enter results (for example WBC 11.9, flag abnormal) and save, or paste the barcode into the **Instrument** page and send the sample message. Status becomes `RESULTED`.
-6. Click **Move to REPORTED**. The timeline shows each step and who did it.
-7. **Specimens**: search by barcode or MRN and open the same specimen.
-8. Sign in as `admin` / `admin123` to view the **Audit** page, or reject another specimen with a reason.
+1. Sign in as `tech` / `tech123`. Land on the **Work queue** (actionable specimens by status).
+2. **Orders → New order**: pick a client, enter a fictional patient (see [docs/SAMPLE_DATA.md](./docs/SAMPLE_DATA.md)), tick CBC, create.
+3. On the order page, **Accession** the specimen. Print the accession label preview if you want; barcode status is `RECEIVED`.
+4. Press `/` and paste the barcode into the top **Scan** box → opens the specimen. Click **Move to IN TESTING**.
+5. Enter results (for example WBC 11.9, flag abnormal) and save, or send the sample on the **Instrument** page. Status becomes `RESULTED`.
+6. From the work queue (or specimen page) **Report**. Timeline shows each step and who did it.
+7. **Specimens**: filter by status, date range, MRN, or barcode (paginated).
+8. Sign in as `admin` / `admin123` for **Audit**, or reject another specimen with a reason.
 
 ## Deploying (optional)
 

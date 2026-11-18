@@ -798,6 +798,187 @@ pre.out {
   animation: toastIn 0.2s ease-out;
 }
 
+/* ---- work queue + scan + pagination ---- */
+.queueIntro {
+  margin: -0.5rem 0 1.25rem;
+}
+
+.queueIntro kbd {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 0.85em;
+  font-family: var(--font-mono), "Source Code Pro", monospace;
+}
+
+.scanBox {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 0 1 18rem;
+  position: relative;
+  margin-left: auto;
+}
+
+.scanLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.scanInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.scanInput::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.scanInput:focus {
+  outline: none;
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+.scanGo {
+  flex: 0 0 auto;
+}
+
+.scanHint {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  padding: 0.4rem 0.55rem;
+  background: #fff;
+  color: var(--rejected-fg);
+  font-size: 0.78rem;
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  z-index: 20;
+}
+
+.pagination,
+.paginationMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.paginationMeta {
+  justify-content: flex-end;
+  margin-bottom: 0;
+}
+
+/* ---- accession label preview ---- */
+.labelOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(19, 32, 44, 0.45);
+  overflow: auto;
+}
+
+.labelDialog {
+  width: min(32rem, 100%);
+  margin-bottom: 1rem;
+  padding: 1.25rem 1.35rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.labelSheet {
+  width: min(32rem, 100%);
+}
+
+.labelCard {
+  padding: 1.5rem 1.75rem;
+  background: #fff;
+  border: 1px solid #c5d7e2;
+  border-radius: 8px;
+  color: var(--ink);
+}
+
+.labelBrand {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand);
+  margin-bottom: 0.85rem;
+}
+
+.labelBars {
+  display: block;
+  width: 100%;
+  height: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.labelBarcode {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.85rem;
+}
+
+.labelMeta {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.95rem;
+}
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  .labelOverlay,
+  .labelOverlay * {
+    visibility: visible !important;
+  }
+
+  .labelOverlay {
+    position: static;
+    background: none;
+    padding: 0;
+    display: block;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .labelSheet,
+  .labelCard {
+    width: 100%;
+    border: none;
+    box-shadow: none;
+  }
+}
+
 @keyframes toastIn {
   from { opacity: 0; transform: translateY(0.4rem); }
   to { opacity: 1; transform: translateY(0); }
@@ -830,6 +1011,13 @@ pre.out {
 
   .nav.open {
     display: flex;
+  }
+
+  .scanBox {
+    order: 3;
+    flex: 1 1 100%;
+    margin-left: 0;
+    max-width: none;
   }
 
   .desktopOnly {

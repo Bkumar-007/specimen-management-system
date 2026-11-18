@@ -134,11 +134,14 @@ class SpecimenWorkflowIntegrationTest {
 
         mvc.perform(get("/api/specimens").param("barcode", barcode).header("Authorization", tech))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(id));
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(id));
         mvc.perform(get("/api/specimens").param("patient", "mrn-1001").param("status", "REPORTED")
                         .header("Authorization", tech))
-                .andExpect(status().isOk()).andExpect(jsonPath("$[0].id").value(id));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.content[0].id").value(id));
+        mvc.perform(get("/api/specimens").param("needsAction", "true").header("Authorization", tech))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray());
 
         mvc.perform(get("/api/specimens/" + id + "/timeline").header("Authorization", tech))
                 .andExpect(status().isOk())
